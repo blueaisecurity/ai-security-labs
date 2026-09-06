@@ -19,9 +19,19 @@ Companion posts: **[blueaisecurity.com](https://blueaisecurity.com)**
 
 ## Requirements
 
-- **Docker Desktop** (free for personal use). On Windows, enable WSL integration.
-- That's it. Each lab runs a local model via Ollama **inside the container** — no
-  API key, no cloud cost. Do not install Ollama natively; it will fight for the port.
+- **Docker Desktop** (free for personal use) — https://docs.docker.com/get-docker/
+- **git**
+- **On Windows:** install **WSL2** and run everything from your Ubuntu (WSL) terminal,
+  not CMD or PowerShell. In Docker Desktop, enable **Settings → Resources → WSL Integration**
+  for your distro. (Quick WSL install: run `wsl --install` in an admin PowerShell, then reboot.)
+
+Each lab runs a local model via Ollama **inside the container** — no API key, no cloud cost.
+
+> **Do not install Ollama natively.** It auto-starts and grabs port **11434**, which the
+> container's own Ollama needs. If you see `port is already allocated` / `Bind for 0.0.0.0:11434 failed`,
+> a native Ollama is running — quit it (Windows: system tray → Quit, or `taskkill /F /IM ollama.exe`;
+> Linux/WSL: `sudo pkill ollama`) and start the lab again. On Windows, also turn off Ollama in
+> **Settings → Apps → Startup** so it stops reclaiming the port on every reboot.
 
 ## Quick start (Lab 01)
 
