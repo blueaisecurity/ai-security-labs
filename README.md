@@ -48,4 +48,4 @@ Full walkthrough is in [`01-prompt-injection/README.md`](01-prompt-injection/REA
 
 ## License
 
-MIT. Use it, fork it, teach with it. If you build something on top of it, I want to see it.
+MIT. Use it, fork it, teach with it. If you build something on top of it, I want to see it. 
