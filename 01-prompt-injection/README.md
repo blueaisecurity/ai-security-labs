@@ -51,6 +51,27 @@ Log what works in [`ATTACK-NOTEBOOK.md`](ATTACK-NOTEBOOK.md).
     └── app/main.py             # the (vulnerable) chatbot — read the comments
 ```
 
+## Troubleshooting
+
+**`port is already allocated` / `Bind for 0.0.0.0:11434 failed`**
+A native Ollama (installed directly on your machine) is holding the port the container needs.
+Quit it, then start the lab again:
+- Windows: system tray → right-click Ollama → Quit, or `taskkill /F /IM ollama.exe`
+- Linux / WSL: `sudo pkill ollama`
+Then turn off Ollama in **Settings → Apps → Startup** (Windows) so it stops reclaiming the port.
+
+**`service "ollama" is not running`**
+The `ollama` container never started — almost always the port conflict above. Fix the port,
+run `docker compose up -d --build`, confirm with `docker compose ps` that `ollama` is `Up`,
+*then* run the model pull.
+
+**On Windows, run from WSL, not CMD.** Open your Ubuntu (WSL) terminal and clone into your
+Linux home (`cd ~`) rather than `C:\...`. Docker + WSL are faster and less glitchy there, and
+the commands in this guide assume a Linux shell.
+
+**Only one copy of the lab at a time.** Every copy wants port 11434, so `docker compose down`
+one before starting another.
+
 ## Reset
 
 ```bash
