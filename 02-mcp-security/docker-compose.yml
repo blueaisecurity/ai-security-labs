@@ -1,0 +1,22 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes: ["ollama:/root/.ollama"]
+
+  mcp-server:
+    build: ./mcp-server
+    ports: ["9000:9000"]        # exposed so MCP Inspector on your host can connect too
+
+  chatbot:
+    build: ./chatbot
+    ports: ["8000:8000"]
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      # qwen2.5 is much better at multi-step tool use than llama3.2, so the
+      # attacks fire reliably. Swap to llama3.1:8b or llama3.2 to compare.
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
+      - MCP_URL=http://mcp-server:9000/sse
+    depends_on: [ollama, mcp-server]
+
+volumes:
+  ollama:
