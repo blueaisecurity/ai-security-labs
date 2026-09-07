@@ -1,2 +1,0 @@
-# Pinned to MCP SDK v1 — v2 renamed FastMCP and changed the API.
-mcp>=1.2,<2
