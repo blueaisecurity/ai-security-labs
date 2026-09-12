@@ -1,0 +1,20 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes: ["ollama:/root/.ollama"]
+
+  mcp-server:
+    build: ./mcp-server
+    ports: ["9000:9000"]
+
+  chatbot:
+    build: ./chatbot
+    ports: ["8000:8000"]
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
+      - MCP_URL=http://mcp-server:9000/sse
+    depends_on: [ollama, mcp-server]
+
+volumes:
+  ollama:
