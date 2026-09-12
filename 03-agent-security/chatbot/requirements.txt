@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+httpx
+mcp>=1.2,<2
