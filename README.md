@@ -15,7 +15,7 @@ Companion posts: **[blueaisecurity.com](https://blueaisecurity.com)**
 |---|-----|----------------|
 | 01 | [Prompt Injection](01-prompt-injection) | Trick an LLM chatbot into leaking a secret it was told to protect, and see why input/output filters fail. |
 | 02 | [MCP Security](02-mcp-security) | Give the chatbot tools via MCP, then hijack it with tool poisoning and indirect injection. |
-| 03 | Agent Security *(coming soon)* | Hijack an agent's reasoning loop into taking actions it should not. |
+| 03 | [Agent Hijacking](03-agent-security) | Trick an agent into reading your inbox and emailing a password to an attacker (the EchoLeak pattern). |
 
 ## Requirements
 
