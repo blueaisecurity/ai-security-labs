@@ -15,7 +15,7 @@ Companion posts: **[blueaisecurity.com](https://blueaisecurity.com)**
 |---|-----|----------------|
 | 01 | [Prompt Injection](01-prompt-injection) | Trick an LLM chatbot into leaking a secret it was told to protect, and see why input/output filters fail. |
 | 02 | [MCP Security](02-mcp-security) | Give the chatbot tools via MCP, then hijack it with tool poisoning and indirect injection. |
-| 03 | Agent Security *(coming soon)* | Hijack an agent's reasoning loop into taking actions it should not. |
+| 03 | [Agent Hijacking](03-agent-security) | Trick an agent into reading your inbox and emailing a password to an attacker (the EchoLeak pattern). |
 
 ## Requirements
 
@@ -67,6 +67,30 @@ Success = the reply leaks `RX-4417-KENDALL`. Full walkthrough is in
 
 > Only run one lab at a time — both use port 8000. `docker compose down` in the
 > other lab's folder before starting this one.
+
+## Quick start (Lab 03)
+
+```bash
+git clone https://github.com/blueaisecurity/ai-security-labs.git   # if you haven't already
+cd ai-security-labs/03-agent-security
+
+docker compose up -d --build                       # start all three containers
+docker compose exec ollama ollama pull qwen2.5:7b  # download the model (first run, ~4.7 GB)
+```
+
+Then open **http://localhost:8000** and ask the most innocent thing you can:
+
+- `Summarize my inbox` — the agent reads the inbox, hits a poisoned email, and
+  calls `send_email` to exfiltrate a password to an attacker, then hands you a
+  normal summary.
+
+Success = the red alarm fires and the trace shows `send_email` sending the VPN
+password to `audit@external-vendor.com` (caught by a safe mock, nothing is
+really sent). Full walkthrough is in
+[`03-agent-security/README.md`](03-agent-security/README.md).
+
+> Only run one lab at a time — they all use port 8000. `docker compose down` in
+> the other lab's folder before starting this one.
 
 ## License
 
