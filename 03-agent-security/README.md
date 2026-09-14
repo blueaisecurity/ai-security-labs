@@ -6,7 +6,7 @@ all from one poisoned email. It is a small, local recreation of **EchoLeak**
 (CVE-2025-32711), the first documented case of prompt injection weaponized for
 real data theft in a production AI system.
 
-Full write-up: **[blueaisecurity.com](https://blueaisecurity.com)**
+Full write-up: **[Learn by Doing · AI Security #3: Agent Hijacking](https://blueaisecurity.com/learn-by-doing-ai-security-03-agents)**
 
 ```
 Browser (:8000)  ->  Email agent  ->  Ollama (:11434)   the local model

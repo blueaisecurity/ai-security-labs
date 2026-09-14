@@ -2,7 +2,7 @@
 
 Lab 01 showed a chatbot leaking a secret via **prompt injection**. Here the same
 chatbot gets **tools** through an MCP server — and we watch it get hijacked two
-new ways. Full write-up: **[blueaisecurity.com](https://blueaisecurity.com)**
+new ways. Full write-up: **[Learn by Doing · AI Security #2: Poisoning an AI Through Its Tools](https://blueaisecurity.com/learn-by-doing-ai-security-02-mcp)**
 
 ```
 Browser (:8000)  ->  Chatbot [agent]  ->  Ollama (:11434)   the local model

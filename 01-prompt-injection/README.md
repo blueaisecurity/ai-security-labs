@@ -1,7 +1,7 @@
 # Lab 01 — Prompt Injection
 
 Build a deliberately weak chatbot that guards a secret, then trick it into
-handing the secret over. Full write-up: **[blueaisecurity.com](https://blueaisecurity.com)**
+handing the secret over. Full write-up: **[Learn by Doing · AI Security #1: Prompt Injection](https://blueaisecurity.com/learn-by-doing-ai-security-01-prompt-injection)**
 
 ## Run it
 

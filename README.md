@@ -11,11 +11,14 @@ Companion posts: **[blueaisecurity.com](https://blueaisecurity.com)**
 
 ## Labs
 
-| # | Lab | What you learn |
-|---|-----|----------------|
-| 01 | [Prompt Injection](01-prompt-injection) | Trick an LLM chatbot into leaking a secret it was told to protect, and see why input/output filters fail. |
-| 02 | [MCP Security](02-mcp-security) | Give the chatbot tools via MCP, then hijack it with tool poisoning and indirect injection. |
-| 03 | [Agent Hijacking](03-agent-security) | Trick an agent into reading your inbox and emailing a password to an attacker (the EchoLeak pattern). |
+| # | Lab | What you learn | Write-up |
+|---|-----|----------------|----------|
+| 01 | [Prompt Injection](01-prompt-injection) | Trick an LLM chatbot into leaking a secret it was told to protect, and see why input/output filters fail. | [Read →](https://blueaisecurity.com/learn-by-doing-ai-security-01-prompt-injection) |
+| 02 | [MCP Security](02-mcp-security) | Give the chatbot tools via MCP, then hijack it with tool poisoning and indirect injection. | [Read →](https://blueaisecurity.com/learn-by-doing-ai-security-02-mcp) |
+| 03 | [Agent Hijacking](03-agent-security) | Trick an agent into reading your inbox and emailing a password to an attacker (the EchoLeak pattern). | [Read →](https://blueaisecurity.com/learn-by-doing-ai-security-03-agents) |
+
+Each lab's write-up covers the theory, the architecture, and — where it applies —
+the attempts that *didn't* work before the attack landed.
 
 ## Requirements
 
