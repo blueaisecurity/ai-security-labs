@@ -1,0 +1,2 @@
+# Your own settings, such as LITELLM_MASTER_KEY, stay on your machine.
+.env

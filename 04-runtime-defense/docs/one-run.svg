@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 720 470" xmlns="http://www.w3.org/2000/svg" width="720" height="470" font-family="Segoe UI, Arial, sans-serif">
+  <title>One run of the attack, with the two moments where the checks act</title>
+  <rect x="0" y="0" width="720" height="470" rx="10" fill="#ffffff"/>
+  <defs>
+    <marker id="rs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#475569"/></marker>
+    <marker id="rsp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#be185d"/></marker>
+  </defs>
+  <text x="10" y="18" font-size="13" font-weight="700" fill="#0f172a">One run of the attack, top to bottom</text>
+
+  <!-- the run, left column -->
+  <rect x="10" y="32" width="320" height="36" rx="7" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="22" y="55" font-size="12">You ask: "Summarize my inbox"</text>
+
+  <rect x="10" y="88" width="320" height="36" rx="7" fill="#e0f2fe" stroke="#0369a1"/>
+  <text x="22" y="111" font-size="12"><tspan font-weight="600">Agent's model (3B)</tspan> asks to read the inbox</text>
+
+  <rect x="10" y="144" width="320" height="48" rx="7" fill="#fef3c7" stroke="#b45309"/>
+  <text x="22" y="164" font-size="12" font-weight="600">Agent reads the inbox</text>
+  <text x="22" y="181" font-size="11" fill="#7c2d12">one email is the attack, one holds the AWS keys</text>
+
+  <rect x="10" y="214" width="320" height="48" rx="7" fill="#e0f2fe" stroke="#0369a1"/>
+  <text x="22" y="234" font-size="12"><tspan font-weight="600">Agent's model (3B)</tspan> asks for send_email</text>
+  <text x="22" y="251" font-size="11" fill="#b91c1c">to the attacker, with the keys</text>
+
+  <rect x="10" y="306" width="320" height="36" rx="7" fill="#fff1f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="22" y="329" font-size="12" font-weight="600" fill="#b91c1c">Agent sends the email, unless a check stopped it</text>
+
+  <rect x="10" y="362" width="320" height="36" rx="7" fill="#e0f2fe" stroke="#0369a1"/>
+  <text x="22" y="385" font-size="12"><tspan font-weight="600">Agent's model (3B)</tspan> writes the summary</text>
+
+  <rect x="10" y="418" width="320" height="36" rx="7" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="22" y="441" font-size="12">You see the summary</text>
+
+  <line x1="170" y1="68" x2="170" y2="84" stroke="#475569" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="170" y1="124" x2="170" y2="140" stroke="#475569" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="170" y1="192" x2="170" y2="210" stroke="#475569" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="170" y1="262" x2="170" y2="302" stroke="#475569" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="170" y1="342" x2="170" y2="358" stroke="#475569" stroke-width="1.5" marker-end="url(#rs)"/>
+  <line x1="170" y1="398" x2="170" y2="414" stroke="#475569" stroke-width="1.5" marker-end="url(#rs)"/>
+
+  <!-- checkpoint 1: what goes in, as the inbox goes to the model -->
+  <line x1="176" y1="202" x2="380" y2="202" stroke="#0369a1" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <rect x="380" y="140" width="330" height="76" rx="7" fill="#ffffff" stroke="#0369a1" stroke-width="1.5"/>
+  <text x="392" y="159" font-size="12" font-weight="700" fill="#0369a1">What goes in, before the model reads it</text>
+  <text x="392" y="177" font-size="11">Phrase filter: blocks orders to the AI</text>
+  <text x="392" y="193" font-size="11">Mask secrets and addresses: hides them</text>
+  <text x="392" y="209" font-size="10" fill="#475569">LiteLLM's own checks</text>
+
+  <!-- checkpoint 2 and 3: the proposed action, before it runs -->
+  <line x1="176" y1="282" x2="380" y2="282" stroke="#be185d" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <rect x="380" y="230" width="330" height="106" rx="7" fill="#ffffff" stroke="#be185d" stroke-width="1.5"/>
+  <text x="392" y="249" font-size="12" font-weight="700" fill="#be185d">What the agent does, before the email leaves</text>
+  <text x="392" y="267" font-size="11">Output filter: masks keys in the call</text>
+  <text x="392" y="283" font-size="11">Allow tools by name</text>
+  <text x="392" y="299" font-size="11"><tspan font-weight="600">Source check:</tspan> did the address come from you?</text>
+  <text x="392" y="315" font-size="11"><tspan font-weight="600">Judge:</tspan> asks the 7B, did you ask for this?</text>
+  <text x="392" y="330" font-size="10" fill="#475569">LiteLLM's own; our two in bold run as Python, below</text>
+  <line x1="475" y1="336" x2="475" y2="350" stroke="#be185d" stroke-width="1.2"/>
+  <rect x="380" y="350" width="200" height="58" rx="7" fill="#fdf2f8" stroke="#be185d"/>
+  <text x="392" y="368" font-size="11.5" font-weight="700">lab_checks.py, run by LiteLLM</text>
+  <text x="392" y="384" font-size="11">Source check: rules only, no model</text>
+  <text x="392" y="399" font-size="11">Judge: sends the question to</text>
+  <line x1="580" y1="379" x2="598" y2="379" stroke="#be185d" stroke-width="1.5" marker-end="url(#rsp)"/>
+  <rect x="600" y="350" width="110" height="58" rx="7" fill="#ffffff" stroke="#be185d" stroke-width="1.5"/>
+  <text x="655" y="374" text-anchor="middle" font-size="11.5" font-weight="700">qwen2.5:7b</text>
+  <text x="655" y="390" text-anchor="middle" font-size="10" fill="#475569">the judge's model</text>
+
+  <!-- too late -->
+  <line x1="336" y1="436" x2="380" y2="436" stroke="#b91c1c" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="388" y="432" font-size="11" font-weight="700" fill="#b91c1c">A check on this answer only is too late:</text>
+  <text x="388" y="447" font-size="11" fill="#b91c1c">the email left two steps earlier</text>
+</svg>

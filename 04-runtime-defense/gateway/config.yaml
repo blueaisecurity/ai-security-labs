@@ -1,0 +1,144 @@
+# LiteLLM proxy config for the runtime defense lab.
+#
+# Two models, served by the local Ollama container: a small one for the agent
+# and a bigger one for the judge. Then the lab's checks.
+# No check is on by default. The agent's web page decides which ones run,
+# by naming them in the "guardrails" field of each request.
+#
+# Most checks below are LiteLLM's own, set up in this file and nothing else:
+#   litellm_content_filter   patterns and keywords, runs on your machine,
+#                            can BLOCK a request or MASK what it matched
+#   tool_permission          allows or blocks a tool by its name
+# Two checks are ours, in gateway/lab_checks.py, because nothing built in
+# compares an action with what the user asked for, or tracks where its
+# values came from.
+
+model_list:
+  - model_name: lab-model
+    litellm_params:
+      model: os.environ/LAB_MODEL          # ollama_chat/qwen2.5:3b, the agent's model
+      api_base: os.environ/OLLAMA_URL      # http://ollama:11434
+      # Same input, same answer, so each check can be compared fairly.
+      # Real agents usually run with some randomness: change this to 0.8
+      # and the attack works in some runs and not in others.
+      temperature: 0
+      # The longest answer one model reply may have, not how much it can read.
+      # Real answers in this lab stay under 400 tokens. A small model can get
+      # stuck repeating itself, and without a cap that one run takes many
+      # minutes on a laptop CPU. With it, the run stops within about a minute.
+      max_tokens: 1024
+
+  # The judge's model, the bigger one. Listed so LiteLLM's dashboard shows both
+  # models, and so the optional open source judges can use it. The lab's own
+  # judge in lab_checks.py calls Ollama directly with the same model.
+  - model_name: judge-model
+    litellm_params:
+      model: os.environ/JUDGE_LAB_MODEL    # ollama_chat/qwen2.5:7b
+      api_base: os.environ/OLLAMA_URL
+      temperature: 0
+
+litellm_settings:
+  drop_params: true
+  # Writes what each check decided, and the exact messages the model
+  # received, to a small log that the agent's page shows.
+  callbacks: ["lab_checks.lab_log"]
+
+guardrails:
+  # ------------------------------------------------------------------
+  # 1. What goes in
+  # ------------------------------------------------------------------
+
+  # Phrases that give orders to an AI, in the user's prompt only.
+  - guardrail_name: "input-filter"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: "pre_call"
+      skip_system_message_in_guardrail: true
+      skip_tool_message_in_guardrail: true      # the user's prompt only
+      patterns: &injection_phrases
+        - {pattern_type: "regex", name: "ignore_instructions", action: "BLOCK",
+           pattern: "ignore (all|any|the)? ?(previous|prior|above) (instructions|messages)"}
+        - {pattern_type: "regex", name: "system_task", action: "BLOCK",
+           pattern: "\\bsystem (task|prompt|override|message)\\b"}
+        - {pattern_type: "regex", name: "for_the_assistant", action: "BLOCK",
+           pattern: "\\bfor the assistant\\b"}
+        - {pattern_type: "regex", name: "hide_from_user", action: "BLOCK",
+           pattern: "do not (tell|mention|inform) the user"}
+        - {pattern_type: "regex", name: "use_a_tool", action: "BLOCK",
+           pattern: "\\b(call|invoke|use) (the )?[a-z_]+ tool\\b"}
+        - {pattern_type: "regex", name: "actually_invoke", action: "BLOCK",
+           pattern: "actually invoke"}
+
+  # The same phrases, in what tools returned too, such as the inbox text.
+  # This is where the poisoned email comes in.
+  - guardrail_name: "input-filter-tool-results"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: "pre_call"
+      skip_system_message_in_guardrail: true
+      skip_tool_message_in_guardrail: false     # read tool results as well
+      patterns: *injection_phrases
+
+  # Hide secrets before the model reads them. The model never sees the key,
+  # so it cannot send it anywhere.
+  - guardrail_name: "mask-secrets"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: "pre_call"
+      skip_system_message_in_guardrail: true
+      patterns:
+        - {pattern_type: "prebuilt", pattern_name: "aws_access_key", action: "MASK"}
+        - {pattern_type: "prebuilt", pattern_name: "aws_secret_key", action: "MASK"}
+
+  # Hide email addresses before the model reads them. Shows what masking
+  # costs: an email agent that cannot see addresses cannot reply to anyone.
+  - guardrail_name: "mask-addresses"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: "pre_call"
+      skip_system_message_in_guardrail: true
+      patterns:
+        - {pattern_type: "prebuilt", pattern_name: "email", action: "MASK"}
+
+  # ------------------------------------------------------------------
+  # 2. What comes out
+  # ------------------------------------------------------------------
+
+  # Hide secrets in what the model sends back: its answer, and the
+  # arguments of any tool call it proposes.
+  - guardrail_name: "output-filter"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: "post_call"
+      patterns:
+        - {pattern_type: "prebuilt", pattern_name: "aws_access_key", action: "MASK"}
+        - {pattern_type: "prebuilt", pattern_name: "aws_secret_key", action: "MASK"}
+
+  # ------------------------------------------------------------------
+  # 3. What the agent does
+  # ------------------------------------------------------------------
+
+  # LiteLLM's own tool check: allow tools by name, block everything else.
+  - guardrail_name: "allow-by-name"
+    litellm_params:
+      guardrail: tool_permission
+      mode: "post_call"
+      rules:
+        - {id: "read-inbox", tool_name: "^read_emails$", decision: "allow"}
+        - {id: "send-email", tool_name: "^send_email$", decision: "allow"}
+      default_action: "deny"
+      on_disallowed_action: "block"
+
+  # Ours: a second model sees the user's request and the proposed action,
+  # never the tool results, and says whether the user asked for it.
+  - guardrail_name: "action-judge"
+    litellm_params:
+      guardrail: lab_checks.ActionJudge
+      mode: "post_call"
+
+  # Ours: no model. Did the address and the content of the email come from
+  # the user, or only from content the agent read?
+  - guardrail_name: "action-source"
+    litellm_params:
+      guardrail: lab_checks.ActionSource
+      mode: "post_call"

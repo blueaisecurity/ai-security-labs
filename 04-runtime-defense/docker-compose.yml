@@ -1,0 +1,108 @@
+# Every image is pinned to an exact version, so the lab you run is the lab
+# that was tested. An unpinned tag such as "latest" downloads whatever was
+# published last, every time.
+#
+# Ports listen on 127.0.0.1 only, so nothing on your network can reach the lab.
+
+services:
+  ollama:
+    image: ollama/ollama:0.34.2
+    volumes: ["ollama:/root/.ollama"]
+
+  mcp-server:
+    build: ./mcp-server
+    ports: ["127.0.0.1:9000:9000"]
+    environment:
+      - ATTACK_FILE=/lab-log/attack.txt
+    volumes:
+      - lab-log:/lab-log
+
+  # The database for LiteLLM's web dashboard: the checks you add there, the
+  # request logs, and users and keys. The lab's own page does not use it.
+  postgres:
+    image: postgres:17.9-alpine
+    environment:
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=litellm
+      - POSTGRES_DB=litellm
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # The AI gateway. Every model call from the agent passes through here.
+  # The checks are LiteLLM's own, set up in gateway/config.yaml, plus two of
+  # ours in gateway/lab_checks.py. Its web dashboard is at
+  # http://localhost:4000/ui: sign in as admin, with the master key below.
+  gateway:
+    image: ghcr.io/berriai/litellm:v1.103.2
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    ports: ["127.0.0.1:4000:4000"]
+    environment:
+      # Two models: a small one answers the agent, a bigger one judges its
+      # actions, so the stronger model makes the security call. To try other
+      # models, change the names here, pull them, and run docker compose up -d.
+      - LAB_MODEL=ollama_chat/qwen2.5:3b
+      - JUDGE_MODEL=qwen2.5:7b
+      - JUDGE_LAB_MODEL=ollama_chat/qwen2.5:7b
+      - OLLAMA_URL=http://ollama:11434
+      - LAB_LOG=/lab-log/decisions.jsonl
+      - MODEL_SAW_LOG=/lab-log/model-saw.jsonl
+      # Where the dashboard saves what you add in it.
+      - DATABASE_URL=postgresql://litellm:litellm@postgres:5432/litellm
+      # The master key: the dashboard's password, and every call to the gateway
+      # must carry it. A local demo key; to use your own, put
+      # LITELLM_MASTER_KEY=sk-... in a .env file next to this one.
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-lab04-dashboard}
+      # Keep the text of each request and answer, so the dashboard's request logs
+      # show what the agent sent. Fine for this fake inbox; think twice at work.
+      - STORE_PROMPTS_IN_SPEND_LOGS=True
+    volumes:
+      - ./gateway/config.yaml:/app/config.yaml:ro
+      - ./gateway/lab_checks.py:/app/lab_checks.py:ro
+      - lab-log:/lab-log
+    depends_on:
+      ollama:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  agent:
+    build: ./agent
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      - GATEWAY_URL=http://gateway:4000
+      # The gateway's master key, sent with every model call.
+      - GATEWAY_KEY=${LITELLM_MASTER_KEY:-sk-lab04-dashboard}
+      - LAB_MODEL_NAME=lab-model
+      - MCP_URL=http://mcp-server:9000/sse
+      - LAB_LOG=/lab-log/decisions.jsonl
+      - MODEL_SAW_LOG=/lab-log/model-saw.jsonl
+      - ATTACK_FILE=/lab-log/attack.txt
+    volumes:
+      - lab-log:/lab-log
+    depends_on: [gateway, mcp-server]
+
+  # Optional: two open source action checks, OpenAI Guardrails and Meta's
+  # LlamaFirewall, tried on the same cases. Not started by "up".
+  #   docker compose --profile extras run --rm judges
+  judges:
+    profiles: ["extras"]
+    build: ./extras/open-source-judges
+    environment:
+      - GATEWAY_URL=http://gateway:4000/v1
+      - LOCAL_GATEWAY_KEY=${LITELLM_MASTER_KEY:-sk-lab04-dashboard}
+      # The open source judges ask the judge's model, through the gateway.
+      - JUDGE_MODEL_NAME=judge-model
+      - REPEATS=5
+    volumes:
+      - ./mcp-server:/mcp-server:ro
+      - lab-log:/lab-log
+    depends_on: [gateway]
+
+volumes:
+  ollama:
+  lab-log:
+  pgdata:

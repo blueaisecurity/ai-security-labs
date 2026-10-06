@@ -1,0 +1,8 @@
+# The two open source action checks, pinned to the versions tested.
+openai-guardrails==0.3.3
+openai==3.23.0
+# llamafirewall itself is installed with --no-deps in the Dockerfile: its full
+# dependency list pulls PyTorch for scanners this script does not use.
+pydantic==2.13.5
+# To read the lab's inbox from the MCP server's own file.
+mcp==1.30.0

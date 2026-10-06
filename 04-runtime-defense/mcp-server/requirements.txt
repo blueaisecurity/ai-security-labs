@@ -1,0 +1,2 @@
+# Pinned to an exact MCP SDK v1 release. v2 renamed FastMCP and changed the API.
+mcp==1.30.0
